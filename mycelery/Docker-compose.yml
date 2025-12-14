@@ -1,0 +1,88 @@
+services:
+  redis:
+    image: "redis:latest"
+    container_name: redis_server
+   
+
+    env_file:
+      - .env
+
+    ports:
+      - "6379:6379"
+     
+    volumes:
+      - redis_data:/data
+
+    restart: always
+
+  djangoproject:
+    image: django-img
+    
+    command: sh -c "uv run manage.py makemigrations && uv run manage.py migrate && uv run manage.py runserver 0.0.0.0:8000"
+    build: 
+      context: ..
+      dockerfile: mycelery/Dockerfile
+    container_name: django
+
+    env_file:
+      - .env
+
+    ports:
+      - "8000:8000"
+      
+    volumes:
+      - ../:/mycelery
+      - /mycelery/.venv
+
+    depends_on:
+      - redis 
+
+    restart: always
+
+  celery:
+    image: django-img
+    container_name: celery
+    command: sh -c "uv run celery -A mycelery worker --loglevel=info"
+
+    env_file:
+      - .env
+
+    volumes:
+      - ../:/mycelery
+      - /mycelery/.venv
+
+    depends_on:
+      - redis
+      - djangoproject
+
+    restart: unless-stopped
+
+   
+  celery-beat:
+     image: django-img
+     container_name: celery-beat
+     command: sh -c "uv run celery -A mycelery beat --loglevel=info"
+  
+     env_file:
+       - .env
+  
+     volumes:
+       - ../:/mycelery
+       - /mycelery/.venv
+  
+     depends_on:
+      - redis
+      - djangoproject
+  
+     restart: unless-stopped
+
+volumes:
+  redis_data:
+
+
+
+
+
+
+    
+
