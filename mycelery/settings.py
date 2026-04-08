@@ -131,7 +131,7 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'send-email-every-10-seconds': {
         'task': 'core.tasks.send_email_task',
-        'schedule': 10.0,  # every 10 seconds
+        'schedule': 3600,  # every 1 hr
     },
 }
 
